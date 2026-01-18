@@ -1,0 +1,296 @@
+import { useState, useRef } from 'react';
+import { Upload, FileText, X, FileCheck2, ChevronDown, Star } from 'lucide-react';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
+
+interface HomeProps {
+  onAnalysisStart: (documentId: string) => void;
+}
+
+// --- ÉLÉMENTS DE DÉCORATION EN BACKGROUND ---
+const BackgroundDecorations = () => (
+  <div className="fixed inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0 }}>
+    <i className="fa-solid fa-file-word text-blue-500/10 text-8xl absolute -rotate-12 top-[15%] left-[5%]"></i>
+    <i className="fa-solid fa-file-pdf text-red-500/10 text-9xl absolute rotate-12 top-[45%] right-[8%]"></i>
+    <i className="fa-solid fa-file-lines text-gray-500/10 text-7xl absolute -rotate-6 bottom-[15%] left-[10%]"></i>
+    <i className="fa-solid fa-file-excel text-green-500/10 text-8xl absolute rotate-[20deg] top-[10%] right-[15%]"></i>
+    <i className="fa-solid fa-file-code text-cyan-500/10 text-9xl absolute -rotate-12 bottom-[10%] right-[20%]"></i>
+  </div>
+);
+
+// --- COMPOSANT FAQ ---
+function FAQSection() {
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const faqs = [
+    {
+      question: "Quels sont les modes de paiement acceptés ?",
+      answer: "Nous acceptons toutes les principales cartes de crédit (Visa, Mastercard, American Express), PayPal, et les virements bancaires pour les entreprises."
+    },
+    {
+      question: "Puis-je annuler mon abonnement à tout moment ?",
+      answer: "Oui, absolument ! Vous pouvez annuler votre abonnement à tout moment depuis votre tableau de bord."
+    },
+    {
+      question: "Proposez-vous un essai gratuit ?",
+      answer: "Oui ! Nous offrons un essai gratuit de 14 jours sans carte de crédit requise."
+    },
+  ];
+
+  const filteredFaqs = faqs.filter(faq =>
+    faq.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    faq.answer.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  return (
+    <div className="max-w-4xl mx-auto px-4 py-20 relative z-10">
+      <div className="text-center mb-16">
+        <span className="inline-block px-4 py-2 mb-4 text-sm font-semibold text-gray-600 bg-gray-100 rounded-full border border-gray-200">
+          Support
+        </span>
+        <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">Questions Fréquentes</h2>
+      </div>
+
+      <div className="mb-12">
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Rechercher une question..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full px-6 py-4 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-gray-100 outline-none transition-all shadow-sm"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        {filteredFaqs.map((faq, index) => (
+          <div key={index} className="bg-white border border-gray-200 rounded-xl overflow-hidden hover:shadow-md transition-all">
+            <button
+              onClick={() => setOpenIndex(openIndex === index ? null : index)}
+              className="w-full px-6 py-5 flex items-center justify-between text-left"
+            >
+              <span className="text-lg font-semibold text-gray-900">{faq.question}</span>
+              <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${openIndex === index ? 'rotate-180' : ''}`} />
+            </button>
+            {openIndex === index && (
+              <div className="px-6 pb-5 text-gray-600 border-t border-gray-50 pt-4">
+                {faq.answer}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// --- COMPOSANT TÉMOIGNAGES (Correction : Suppression de export default ici) ---
+function Testimonials() {
+  const testimonials = [
+    {
+      name: 'Sophie Martin',
+      role: 'Étudiante',
+      image: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=300',
+      content: 'Un outil indispensable pour vérifier mes mémoires avant le rendu final. Très précis !',
+      rating: 5,
+    },
+    {
+      name: 'Marc Dubois',
+      role: 'Enseignant',
+      image: 'https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=300',
+      content: 'Interface intuitive et rapports clairs. Cela me fait gagner un temps précieux dans mes corrections.',
+      rating: 5,
+    },
+    {
+      name: 'Claire Lemoine',
+      role: 'Rédactrice Web',
+      image: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=300',
+      content: 'La détection de paraphrases est impressionnante. La sécurité de mes documents est aussi un grand plus.',
+      rating: 5,
+    }
+  ];
+
+  return (
+    <section id="testimonials" className="w-full bg-blue-500 py-20 relative z-10">
+      <div className="max-w-7xl mx-auto px-4">
+        <div className="text-center mb-16">
+          <span className="text-blue-600 font-semibold text-sm uppercase tracking-wide">Témoignages</span>
+          <h2 className="text-4xl font-bold text-gray-900 mt-4">Ils nous font confiance</h2>
+        </div>
+
+        <div className="grid md:grid-cols-3 gap-8">
+          {testimonials.map((t, i) => (
+            <div key={i} className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 hover:shadow-xl transition-all transform hover:-translate-y-2">
+              <div className="flex items-center mb-6">
+                <img src={t.image} alt={t.name} className="w-14 h-14 rounded-full object-cover border-2 border-blue-100" />
+                <div className="ml-4">
+                  <h4 className="font-bold text-gray-900">{t.name}</h4>
+                  <p className="text-sm text-gray-500">{t.role}</p>
+                </div>
+              </div>
+              <div className="flex mb-4">
+                {[...Array(t.rating)].map((_, idx) => (
+                  <Star key={idx} className="w-4 h-4 text-yellow-400 fill-current" />
+                ))}
+              </div>
+              <p className="text-gray-700 italic">"{t.content}"</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// --- COMPOSANT PRINCIPAL (Le seul export default) ---
+export default function Home({ onAnalysisStart }: HomeProps) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [error, setError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user } = useAuth();
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile?.name.endsWith('.txt')) {
+      setFile(selectedFile);
+      setError('');
+    } else {
+      setError('Veuillez sélectionner un fichier texte (.txt)');
+    }
+  };
+
+  const handleAnalyze = async () => {
+    if (!file || !user) return;
+    setUploading(true);
+    try {
+      const content = await file.text();
+      const { data, error: insertError } = await supabase
+        .from('documents')
+        .insert({
+          user_id: user.id,
+          filename: file.name,
+          file_size: file.size,
+          content: content,
+          status: 'pending'
+        })
+        .select().single();
+
+      if (insertError) throw insertError;
+      onAnalysisStart(data.id);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 font-sans relative">
+      <BackgroundDecorations />
+
+      <nav className="fixed top-0 left-0 right-0 bg-white/80 backdrop-blur-md border-b border-gray-200 z-50">
+        <div className="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-200">
+              <FileCheck2 className="w-6 h-6 text-white" />
+            </div>
+            <span className="text-xl font-bold text-gray-900">PlagDetect</span>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <button onClick={() => onAnalysisStart('')} className="text-blue-600 font-semibold hover:bg-blue-50 px-4 py-2 rounded-lg transition-all">
+              Tableau de bord
+            </button>
+            <button onClick={() => supabase.auth.signOut()} className="text-gray-600 hover:text-red-600 px-4 py-2 font-medium">
+              Déconnexion
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <main className="pt-32 pb-20 relative z-10">
+        <div className="max-w-4xl mx-auto px-4">
+          <div className="text-center mb-16">
+            <h1 className="text-5xl font-extrabold text-gray-900 mb-6">
+              Détectez le plagiat en <span className="text-blue-600">quelques secondes</span>
+            </h1>
+            <p className="text-xl text-gray-600">
+              Analyse instantanée et sécurisée de vos documents texte.
+            </p>
+          </div>
+
+          <div className="bg-white rounded-3xl shadow-xl p-8 border border-gray-100">
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => { e.preventDefault(); setIsDragging(false); }}
+              className={`border-2 border-dashed rounded-2xl p-12 text-center transition-all ${
+                isDragging ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-blue-400'
+              }`}
+            >
+              {!file ? (
+                <>
+                  <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+                    <Upload className="w-8 h-8 text-white" />
+                  </div>
+                  <h3 className="text-2xl font-bold mb-2">Glissez votre fichier ici</h3>
+                  <button onClick={() => fileInputRef.current?.click()} className="mt-4 px-8 py-3 bg-blue-600 text-white rounded-xl font-bold hover:bg-blue-700 transition-all">
+                    Parcourir les fichiers
+                  </button>
+                  <input ref={fileInputRef} type="file" accept=".txt" onChange={handleFileSelect} className="hidden" />
+                </>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex items-center justify-center gap-4 bg-blue-50 p-4 rounded-xl border border-blue-100">
+                    <FileText className="w-8 h-8 text-blue-600" />
+                    <div className="text-left">
+                      <p className="font-bold">{file.name}</p>
+                      <p className="text-xs text-gray-500">{(file.size / 1024).toFixed(2)} KB</p>
+                    </div>
+                    <button onClick={() => setFile(null)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  <button onClick={handleAnalyze} disabled={uploading} className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-lg disabled:opacity-50">
+                    {uploading ? 'Analyse en cours...' : 'Lancer l\'analyse'}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
+            <FeatureCard icon="fa-bolt" title="Rapide" desc="Analyse en temps réel." color="blue" />
+            <FeatureCard icon="fa-bullseye" title="Précis" desc="IA de pointe." color="cyan" />
+            <FeatureCard icon="fa-shield-halved" title="Sécurisé" desc="100% confidentiel." color="emerald" />
+          </div>
+
+          <FAQSection />
+          <Testimonials />
+
+          <footer className="mt-20 py-12 border-t text-center text-gray-400 text-sm">
+            All Rights Reserved 2026 © PlagDetect
+          </footer>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// Petit composant utilitaire pour les features
+function FeatureCard({ icon, title, desc, color }: { icon: string, title: string, desc: string, color: string }) {
+  const colors: any = { blue: 'bg-blue-50 text-blue-600', cyan: 'bg-cyan-50 text-cyan-600', emerald: 'bg-emerald-50 text-emerald-600' };
+  return (
+    <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-6 ${colors[color]}`}>
+        <i className={`fa-solid ${icon} text-xl`}></i>
+      </div>
+      <h3 className="font-bold text-lg mb-2">{title}</h3>
+      <p className="text-gray-500 text-sm">{desc}</p>
+    </div>
+  );
+}
